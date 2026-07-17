@@ -1,0 +1,61 @@
+name: Deploy to cheewawa.com
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'chilove/**'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up SSH
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          cat >> ~/.ssh/known_hosts <<'HOSTS'
+          65.108.65.26 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDSJtGSzrCgtuPTfq+P8WYeEFywyTyDRBkPvNLzgjLXq
+          HOSTS
+
+      - name: Check deploy target reachable
+        id: reach
+        run: |
+          if ssh -o BatchMode=yes -o ConnectTimeout=10 "$DEPLOY_USER@$DEPLOY_HOST" 'echo ok' >/dev/null 2>&1; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::Deploy skipped: the SSH deploy key is not authorized on $DEPLOY_USER@$DEPLOY_HOST yet. Install the public key in ~/.ssh/authorized_keys to enable deployments."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Sync application (additive, checksum-based, config.php never touched)
+        if: steps.reach.outputs.ready == 'true'
+        run: |
+          rsync -rlptvc \
+            --exclude 'config.php' \
+            chilove/ "$DEPLOY_USER@$DEPLOY_HOST:chilove/"
+
+      - name: Smoke test
+        if: steps.reach.outputs.ready == 'true'
+        run: |
+          home=$(curl -s -o /dev/null -w "%{http_code}" https://cheewawa.com/)
+          css=$(curl -s -o /dev/null -w "%{http_code}" https://cheewawa.com/assets/css/theme.css)
+          echo "homepage=$home theme.css=$css"
+          if [ "$home" != "200" ] || [ "$css" != "200" ]; then
+            echo "::error::Smoke test failed after deploy (homepage=$home, theme.css=$css). Investigate immediately; previous files remain in place except those synced."
+            exit 1
+          fi
