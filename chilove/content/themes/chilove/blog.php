@@ -17,7 +17,7 @@ $base  = '/blog' . ($cat !== '' ? '?cat=' . $cat : '');
 ?>
 
 <section class="page-head">
-    <span class="eyebrow"><?= chi_paw(16) ?> The ChiLove Blog</span>
+    <span class="eyebrow"><?= chi_paw(16) ?> The Cheewawa Blog</span>
     <h1>Every post, in one place</h1>
     <p>Care, training, lifestyle, and health — everything we've written about life with tiny dogs.</p>
 </section>

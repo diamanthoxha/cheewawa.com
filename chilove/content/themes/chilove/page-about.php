@@ -6,14 +6,14 @@ $cats       = get_categories();
 
 <section class="page-head">
     <span class="eyebrow"><?= chi_paw(16) ?> About</span>
-    <h1>Hi, we're <span class="accent">ChiLove</span></h1>
+    <h1>Hi, we're <span class="accent">Cheewawa</span></h1>
     <p>The place our friends already know: whenever a chihuahua question comes up,
        they ask us. This site is where we write the answers down.</p>
 </section>
 
 <div class="about-grid">
     <div class="about-prose">
-        <p>ChiLove started as a notebook full of scribbled care tips and a camera roll
+        <p>Cheewawa started as a notebook full of scribbled care tips and a camera roll
            overflowing with Chihuahua photos. Today it's a friendly blog where new and
            seasoned owners come for honest, practical advice — and a daily dose of tiny-dog joy.</p>
 

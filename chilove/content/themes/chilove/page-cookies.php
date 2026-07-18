@@ -3,21 +3,24 @@
 <section class="page-head">
     <span class="eyebrow"><?= chi_paw(16) ?> Cookies</span>
     <h1>Cookie Policy</h1>
-    <p>The short version: we set none ourselves, our ad provider sets a few. Last updated July 2, 2026.</p>
+    <p>The short version: a few for analytics, a few from our ad provider. Last updated July 13, 2026.</p>
 </section>
 
 <div class="credits-list">
     <div class="card credit">
         <h3><?= chi_paw(18) ?> Cookies we set</h3>
-        <p>None. ChiLove does not use login sessions or analytics cookies.
-           You can read every page on this site without us storing anything in your browser.</p>
+        <p>No login or preference cookies. Our analytics tool, <b>Google Analytics 4</b>, sets
+           cookies such as <code>_ga</code> and <code>_ga_*</code> to count visits and tell new
+           readers from returning ones. It reports in aggregate and never shows us your name.
+           You can block these cookies and every page still works.</p>
     </div>
     <div class="card credit">
         <h3><?= chi_heart(18) ?> Advertising cookies</h3>
         <p>We show ads through <b>Google AdSense</b>. Google and its certified partners may set
            cookies to serve ads, cap how often you see the same one, and measure performance.
            Depending on your region and consent choices, ads are personalized or generic.
-           Opt out or adjust at <a href="https://adssettings.google.com/" target="_blank" rel="noopener">Google Ad Settings</a>.</p>
+           Opt out or adjust at <a href="https://adssettings.google.com/" target="_blank" rel="noopener">Google Ad Settings</a>
+           or via <a href="https://www.aboutads.info/choices" target="_blank" rel="noopener">aboutads.info</a>.</p>
     </div>
     <div class="card credit">
         <h3><?= chi_heart(18) ?> Cookies set by our infrastructure</h3>
@@ -32,7 +35,7 @@
     </div>
     <div class="card credit">
         <h3><?= chi_paw(18) ?> If this ever changes</h3>
-        <p>Should we add anything that uses cookies, this page will list it before it goes live.
+        <p>Should we add anything else that uses cookies, this page will list it before it goes live.
            Questions? <a href="mailto:di@manth.co">di@manth.co</a>.</p>
     </div>
 </div>

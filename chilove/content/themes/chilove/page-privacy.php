@@ -3,13 +3,13 @@
 <section class="page-head">
     <span class="eyebrow"><?= chi_paw(16) ?> Privacy</span>
     <h1>Privacy Policy</h1>
-    <p>What we collect, why we collect it, and how to get it removed. Last updated July 2, 2026.</p>
+    <p>What we collect, why we collect it, and how to get it removed. Last updated July 13, 2026.</p>
 </section>
 
 <div class="credits-list">
     <div class="card credit">
         <h3><?= chi_paw(18) ?> Who we are</h3>
-        <p>ChiLove is a chihuahua blog published at <b>chihuacorner.com</b> and run by
+        <p>Cheewawa is a chihuahua blog published at <b>cheewawa.com</b> and run by
            <a href="https://hoxmedia.net/" target="_blank" rel="noopener">HOX Media</a>.
            For anything privacy related, write to <a href="mailto:di@manth.co">di@manth.co</a>.</p>
     </div>
@@ -27,11 +27,20 @@
         <h3><?= chi_heart(18) ?> Third parties</h3>
         <p>Our pages load fonts from <b>Google Fonts</b>, so your browser makes a request to Google's
            servers when you visit. Traffic is routed through <b>Cloudflare</b> for speed and security.
-           Both may see your IP address as part of serving the site. We do not run analytics scripts.</p>
-        <p><b>Advertising:</b> we use <b>Google AdSense</b> to show ads. Google and its partners may
-           use cookies and your IP address to serve and measure ads, including personalized ads
-           depending on your consent settings. You can manage this at
+           Both may see your IP address as part of serving the site.</p>
+        <p><b>Analytics:</b> we use <b>Google Analytics 4</b> to count visits and see which posts
+           get read. It sets cookies (such as <code>_ga</code>) and collects usage data like pages
+           viewed, rough location, and how you found us. We only ever look at it in aggregate.
+           You can opt out with the
+           <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener">Google Analytics opt-out add-on</a>
+           or by blocking its cookies.</p>
+        <p><b>Advertising:</b> we use <b>Google AdSense</b> to show ads. Third-party vendors,
+           including Google, use cookies to serve ads based on your prior visits to this site or
+           other sites, and may use your IP address to serve and measure ads, including personalized
+           ads depending on your consent settings. You can manage this at
            <a href="https://adssettings.google.com/" target="_blank" rel="noopener">Google Ad Settings</a>,
+           opt out of other third-party vendors at
+           <a href="https://www.aboutads.info/choices" target="_blank" rel="noopener">aboutads.info</a>,
            and read how Google uses data at
            <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener">policies.google.com</a>.</p>
     </div>
@@ -43,7 +52,7 @@
     </div>
     <div class="card credit">
         <h3><?= chi_paw(18) ?> Changes</h3>
-        <p>If we ever add ads, analytics, or anything else that touches your data, this page gets
+        <p>If we add or change anything that touches your data, this page gets
            updated first and the date at the top changes. No silent edits.</p>
     </div>
 </div>
