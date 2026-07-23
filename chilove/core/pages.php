@@ -151,13 +151,23 @@ function chi_sitemap_xml(): void
         ];
     }
 
+    // Author pages (author-20260722): E-E-A-T surface, indexable.
+    foreach (get_authors() as $a) {
+        $urls[] = [
+            'loc'        => $base . author_permalink($a),
+            'changefreq' => 'monthly',
+            'title'      => $a->display_name,
+            'type'       => 'Author',
+        ];
+    }
+
     $posts = db()->getResults(
-        "SELECT slug, title, published_at FROM chi_posts WHERE status = 'publish' ORDER BY published_at DESC"
+        "SELECT slug, title, published_at, updated_at FROM chi_posts WHERE status = 'publish' ORDER BY published_at DESC"
     );
     foreach ($posts as $p) {
         $urls[] = [
             'loc'        => $base . '/post/' . $p->slug,
-            'lastmod'    => substr((string) $p->published_at, 0, 10),
+            'lastmod'    => substr((string) (!empty($p->updated_at) ? $p->updated_at : $p->published_at), 0, 10),
             'changefreq' => 'monthly',
             'title'      => $p->title,
             'type'       => 'Article',
@@ -167,8 +177,10 @@ function chi_sitemap_xml(): void
     header('Content-Type: application/xml; charset=utf-8');
     echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
     // Browsers render the XSL as a styled, clickable page; crawlers read the raw XML.
-    echo '<?xml-stylesheet type="text/xsl" href="/sitemap.xsl?v=20260715b"?>' . "\n";
-    echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:chee="https://cheewawa.com/ns/sitemap">' . "\n";
+    // Standard sitemap tags ONLY (sitemapfix-20260723): GSC flags any custom-namespace
+    // tag as "Invalid XML tag", so the XSL now derives titles/types from the URL instead.
+    echo '<?xml-stylesheet type="text/xsl" href="/sitemap.xsl?v=20260723b"?>' . "\n";
+    echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
     foreach ($urls as $u) {
         echo '  <url><loc>' . esc_html($u['loc']) . '</loc>';
         if (!empty($u['lastmod'])) {
@@ -177,8 +189,6 @@ function chi_sitemap_xml(): void
         if (!empty($u['changefreq'])) {
             echo '<changefreq>' . $u['changefreq'] . '</changefreq>';
         }
-        echo '<chee:title>' . esc_html($u['title']) . '</chee:title>';
-        echo '<chee:type>' . esc_html($u['type']) . '</chee:type>';
         echo '</url>' . "\n";
     }
     echo '</urlset>' . "\n";

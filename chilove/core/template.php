@@ -70,6 +70,71 @@ function post_permalink(object $p): string     { return '/post/' . $p->slug; }
 function category_permalink(object $t): string  { return '/category/' . $t->slug; }
 
 /* ---------------------------------------------------------------------------
+ * Authors (author-20260722): /author/{slug} pages driven by chi_users.
+ * Users have no slug column — the URL slug is derived from display_name.
+ * ------------------------------------------------------------------------- */
+
+function chi_author_slug(string $displayName): string
+{
+    return trim(preg_replace('/-+/', '-', preg_replace('/[^a-z0-9]+/', '-', strtolower($displayName))), '-');
+}
+
+function author_permalink(object $u): string { return '/author/' . chi_author_slug((string) $u->display_name); }
+
+/** Authors that get a page: solo-author model (soloauthor-20260722) — only users with
+ *  published posts. All content is authored by the site editor; retired persona
+ *  accounts hold zero posts and stay invisible (their old URLs 301 in .htaccess). */
+function get_authors(): array
+{
+    static $authors = null;
+    return $authors ??= db()->getResults(
+        "SELECT u.*, COUNT(p.id) AS post_count FROM chi_users u
+         JOIN chi_posts p ON p.author_id = u.id AND p.status = 'publish'
+         GROUP BY u.id ORDER BY post_count DESC"
+    );
+}
+
+/** The site's named editor (editor-20260722): the real person accountable for the content. */
+function chi_site_editor(): ?object
+{
+    foreach (get_authors() as $u) {
+        if ($u->display_name === 'Arjeta Mehmeti') {
+            return $u;
+        }
+    }
+    return null;
+}
+
+/** Verifiable social profiles for an author (sameas column = JSON array of URLs). */
+function chi_author_sameas(object $u): array
+{
+    if (empty($u->sameas)) {
+        return [];
+    }
+    $urls = json_decode((string) $u->sameas, true);
+    return is_array($urls) ? array_values(array_filter($urls, 'is_string')) : [];
+}
+
+function get_author_by_slug(string $slug): ?object
+{
+    foreach (get_authors() as $u) {
+        if (chi_author_slug((string) $u->display_name) === $slug) {
+            return $u;
+        }
+    }
+    return null;
+}
+
+function get_posts_by_author(int $authorId, int $limit = 60): array
+{
+    $sql = "SELECT " . chi_post_columns() . " FROM chi_posts p
+            LEFT JOIN chi_users u ON u.id = p.author_id
+            WHERE p.author_id = ? AND p.status = 'publish'
+            ORDER BY p.published_at DESC LIMIT " . (int) $limit;
+    return db()->getResults($sql, [(int) $authorId]);
+}
+
+/* ---------------------------------------------------------------------------
  * Queries  (lean on the $wpdb-style Database layer)
  * ------------------------------------------------------------------------- */
 
@@ -395,6 +460,11 @@ function chi_seo_meta(object $ctx): array
         $page = ucfirst((string) ($ctx->page ?? ''));
         return ['title' => $page . ' · ' . $name, 'description' => null, 'canonical' => $base . '/' . ($ctx->page ?? '')];
     }
+    if ($type === 'author' && isset($ctx->user)) {
+        $u = $ctx->user;
+        $desc = chi_excerpt((string) ($u->bio ?? ''), 28) ?: ('Articles by ' . $u->display_name . ' on ' . $name . '.');
+        return ['title' => $u->display_name . ', Author · ' . $name, 'description' => $desc, 'canonical' => $base . author_permalink($u)];
+    }
     if ($type === 'search') {
         return ['title' => 'Search · ' . $name, 'description' => null, 'canonical' => $base . '/search'];
     }
@@ -425,6 +495,9 @@ function chi_faq_from_content(string $html): array
     $faqs = [];
     foreach ($doc->getElementsByTagName('h3') as $h3) {
         $q = trim($h3->textContent);
+        if (substr($q, -1) !== '?') {
+            continue;   // FAQPage may only carry real, visible questions (seo-20260722)
+        }
         $n = $h3->nextSibling;
         while ($n && $n->nodeType !== XML_ELEMENT_NODE) {
             $n = $n->nextSibling;
@@ -437,6 +510,49 @@ function chi_faq_from_content(string $html): array
         }
     }
     return $faqs;
+}
+
+/** Organization node reused as Article publisher and in the sitewide block (author-20260722). */
+function chi_org_schema(): array
+{
+    $base = site_url();
+    $org = [
+        '@type' => 'Organization',
+        'name'  => site_name(),
+        'url'   => $base . '/',
+        'logo'  => ['@type' => 'ImageObject', 'url' => $base . '/apple-touch-icon.png'],
+    ];
+    if ($editor = chi_site_editor()) {
+        $founder = ['@type' => 'Person', 'name' => $editor->display_name, 'url' => $base . author_permalink($editor)];
+        if ($sameas = chi_author_sameas($editor)) {
+            $founder['sameAs'] = $sameas;
+        }
+        $org['founder'] = $founder;
+    }
+    return $org;
+}
+
+/** Sitewide Organization + WebSite JSON-LD, emitted once from header.php (author-20260722). */
+function chi_org_jsonld(): string
+{
+    $base = site_url();
+    $org = ['@context' => 'https://schema.org'] + chi_org_schema();
+    $site = [
+        '@context' => 'https://schema.org',
+        '@type'    => 'WebSite',
+        'name'     => site_name(),
+        'url'      => $base . '/',
+        'potentialAction' => [
+            '@type'       => 'SearchAction',
+            'target'      => ['@type' => 'EntryPoint', 'urlTemplate' => $base . '/search?q={search_term_string}'],
+            'query-input' => 'required name=search_term_string',
+        ],
+    ];
+    $out = '';
+    foreach ([$org, $site] as $b) {
+        $out .= '<script type="application/ld+json">' . json_encode($b, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "</script>\n";
+    }
+    return $out;
 }
 
 /** Article + BreadcrumbList + FAQPage JSON-LD for a single post. */
@@ -453,9 +569,15 @@ function chi_jsonld_blocks(object $post): string
         'description'      => $post->meta_description ?? null,
         'image'            => $img ? $base . $img : null,
         'datePublished'    => !empty($post->published_at) ? date('c', strtotime($post->published_at)) : null,
-        'dateModified'     => !empty($post->published_at) ? date('c', strtotime($post->published_at)) : null,
-        'author'           => ['@type' => 'Person', 'name' => $post->author ?? site_name()],
-        'publisher'        => ['@type' => 'Organization', 'name' => site_name()],
+        'dateModified'     => !empty($post->updated_at) ? date('c', strtotime($post->updated_at))
+            : (!empty($post->published_at) ? date('c', strtotime($post->published_at)) : null),
+        'author'           => !empty($post->author)
+            ? ['@type' => 'Person', 'name' => $post->author, 'url' => $base . '/author/' . chi_author_slug((string) $post->author)]
+            : ['@type' => 'Organization', 'name' => site_name(), 'url' => $base . '/'],
+        'editor'           => ($chiEd = chi_site_editor())
+            ? ['@type' => 'Person', 'name' => $chiEd->display_name, 'url' => $base . author_permalink($chiEd)]
+            : null,
+        'publisher'        => chi_org_schema(),
         'mainEntityOfPage' => $base . '/post/' . $post->slug,
     ], static fn ($v) => $v !== null);
 

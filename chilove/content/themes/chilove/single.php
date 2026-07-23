@@ -22,8 +22,11 @@ $related = get_related_posts($p, 3);
                 <span class="category-pill"><?= esc_html($p->category ?? '') ?></span>
                 <h1 class="post-title"><?= esc_html($p->title) ?></h1>
                 <div class="post-meta">
-                    <span><?= esc_html($p->author) ?></span> ·
+                    <span><?php if (!empty($p->author)): ?><a href="<?= esc_attr('/author/' . chi_author_slug((string) $p->author)) ?>"><?= esc_html($p->author) ?></a><?php endif; ?></span> ·
                     <span><?= chi_date($p->published_at) ?></span> ·
+                    <?php if (!empty($p->updated_at) && substr((string) $p->updated_at, 0, 10) !== substr((string) $p->published_at, 0, 10)): ?>
+                    <span>Updated <?= chi_date($p->updated_at) ?></span> ·
+                    <?php endif; ?>
                     <span><?= chi_read_time($p) ?></span>
                 </div>
             </header>
@@ -47,8 +50,12 @@ $related = get_related_posts($p, 3);
                         <img class="author-avatar" src="<?= esc_attr($p->author_avatar) ?>" alt="<?= esc_attr($p->author) ?>" width="72" height="72" loading="lazy">
                     <?php endif; ?>
                     <div>
-                        <h3>Written by <?= esc_html($p->author) ?></h3>
+                        <h3>Written by <a href="<?= esc_attr('/author/' . chi_author_slug((string) $p->author)) ?>"><?= esc_html($p->author) ?></a></h3>
                         <p><?= esc_html($p->author_bio) ?></p>
+                        <p><a class="read-more" href="<?= esc_attr('/author/' . chi_author_slug((string) $p->author)) ?>">All posts by <?= esc_html($p->author) ?> <?= chi_icon('arrow', 14) ?></a></p>
+                        <?php if (($chiEd = chi_site_editor()) && $chiEd->display_name !== $p->author): ?>
+                        <p class="post-meta small">Edited by <a href="<?= esc_attr(author_permalink($chiEd)) ?>"><?= esc_html($chiEd->display_name) ?></a></p>
+                        <?php endif; ?>
                     </div>
                 </div>
             <?php endif; ?>

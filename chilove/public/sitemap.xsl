@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="1.0"
                 xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-                xmlns:sm="http://www.sitemaps.org/schemas/sitemap/0.9"
-                xmlns:chee="https://cheewawa.com/ns/sitemap">
+                xmlns:sm="http://www.sitemaps.org/schemas/sitemap/0.9">
 <xsl:output method="html" encoding="UTF-8" indent="yes"/>
+
+<!-- sitemapfix-20260723: the XML now carries ONLY standard sitemap tags (GSC flagged the
+     old chee: namespace as "Invalid XML tag" x292). Title and Type are derived from the URL. -->
 
 <xsl:template match="/">
 <html lang="en">
@@ -28,6 +30,7 @@
         tr:hover td { background: #FFF9F4; }
         a { color: #4A3728; text-decoration: none; font-weight: 600; }
         a:hover { color: #B4652A; text-decoration: underline; }
+        .title a { text-transform: capitalize; }
         .url a { color: #A78B72; font-size: .82rem; font-weight: 400; word-break: break-all; }
         .url a:hover { color: #B4652A; }
         .mod { color: #8A6D57; white-space: nowrap; }
@@ -38,6 +41,7 @@
         .pill.article { background: #FFDDE4; color: #C2455F; }
         .pill.category { background: #D6ECF5; color: #2E7797; }
         .pill.page { background: #F3E3CE; color: #8A4A17; }
+        .pill.author { background: #E8E0F5; color: #6B4FA0; }
         .pill.home, .pill.blog { background: #DDF2E0; color: #2E7D4F; }
         .foot { margin-top: 22px; color: #A78B72; font-size: .85rem; }
         .foot a { color: #B4652A; }
@@ -68,34 +72,39 @@
             <table>
                 <tr><th>Title</th><th>URL</th><th>Type</th><th>Last updated</th><th>Crawl hint</th></tr>
                 <xsl:for-each select="sm:urlset/sm:url">
+                    <xsl:variable name="path" select="substring-after(substring-after(sm:loc, '://'), '/')"/>
+                    <xsl:variable name="slug">
+                        <xsl:choose>
+                            <xsl:when test="contains($path, '/')"><xsl:value-of select="substring-after($path, '/')"/></xsl:when>
+                            <xsl:otherwise><xsl:value-of select="$path"/></xsl:otherwise>
+                        </xsl:choose>
+                    </xsl:variable>
+                    <xsl:variable name="type">
+                        <xsl:choose>
+                            <xsl:when test="$path = ''">Home</xsl:when>
+                            <xsl:when test="starts-with($path, 'post/')">Article</xsl:when>
+                            <xsl:when test="starts-with($path, 'category/')">Category</xsl:when>
+                            <xsl:when test="starts-with($path, 'author/')">Author</xsl:when>
+                            <xsl:when test="$path = 'blog'">Blog</xsl:when>
+                            <xsl:otherwise>Page</xsl:otherwise>
+                        </xsl:choose>
+                    </xsl:variable>
                     <tr>
-                        <td>
+                        <td class="title">
                             <a href="{sm:loc}">
                                 <xsl:choose>
-                                    <xsl:when test="chee:title != ''"><xsl:value-of select="chee:title"/></xsl:when>
-                                    <xsl:when test="substring-after(substring-after(sm:loc, '://'), '/') != ''">
-                                        /<xsl:value-of select="substring-after(substring-after(sm:loc, '://'), '/')"/>
-                                    </xsl:when>
-                                    <xsl:otherwise>Home</xsl:otherwise>
+                                    <xsl:when test="$path = ''">Home</xsl:when>
+                                    <xsl:otherwise><xsl:value-of select="translate($slug, '-', ' ')"/></xsl:otherwise>
                                 </xsl:choose>
                             </a>
                         </td>
                         <td class="url">
-                            <a href="{sm:loc}">
-                                <xsl:choose>
-                                    <xsl:when test="substring-after(substring-after(sm:loc, '://'), '/') != ''">
-                                        /<xsl:value-of select="substring-after(substring-after(sm:loc, '://'), '/')"/>
-                                    </xsl:when>
-                                    <xsl:otherwise>/</xsl:otherwise>
-                                </xsl:choose>
-                            </a>
+                            <a href="{sm:loc}">/<xsl:value-of select="$path"/></a>
                         </td>
                         <td>
-                            <xsl:if test="chee:type != ''">
-                                <span class="pill {translate(chee:type, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz')}">
-                                    <xsl:value-of select="chee:type"/>
-                                </span>
-                            </xsl:if>
+                            <span class="pill {translate($type, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz')}">
+                                <xsl:value-of select="$type"/>
+                            </span>
                         </td>
                         <td class="mod"><xsl:value-of select="sm:lastmod"/></td>
                         <td>

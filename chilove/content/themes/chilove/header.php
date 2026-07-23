@@ -105,6 +105,9 @@ $cur = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
     </script>
     <?php endif; ?>
 
+    <?php // Sitewide Organization + WebSite entity schema (author-20260722). Article schema stays in single.php. ?>
+    <?= chi_org_jsonld() ?>
+
     <?php // Fonts are self-hosted: @font-face in theme.css, files in /assets/fonts (no third-party connections). ?>
 
     <?php // Site CSS inlined: zero render-blocking stylesheet requests (the 3 files gzip to ~6 KB inside the HTML). ?>

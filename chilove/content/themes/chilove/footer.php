@@ -24,8 +24,9 @@
             <div>
                 <h4>Let's Connect</h4>
                 <div class="socials">
-                    <a href="https://www.instagram.com/the_pupslife/" target="_blank" rel="noopener" aria-label="Instagram"><?= chi_icon('instagram') ?></a>
-                    <a href="https://www.facebook.com/chihuahuasareawesome" target="_blank" rel="noopener" aria-label="Facebook"><?= chi_icon('facebook') ?></a>
+                    <?php // Author's real profiles (matches Person sameAs schema); swap to brand accounts when they exist. ?>
+                    <a href="https://www.instagram.com/jett.mehmeti/" target="_blank" rel="noopener" aria-label="Instagram"><?= chi_icon('instagram') ?></a>
+                    <a href="https://www.facebook.com/arjetamehemeti" target="_blank" rel="noopener" aria-label="Facebook"><?= chi_icon('facebook') ?></a>
                     <a href="/contact" aria-label="Contact us"><?= chi_icon('mail') ?></a>
                 </div>
             </div>

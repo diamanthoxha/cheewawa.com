@@ -9,7 +9,7 @@ namespace ChiLove\Core;
 final class Router
 {
     /** Static pages backed by a page-<name>.php template. */
-    private const PAGES = ['about', 'contact', 'privacy', 'cookies'];
+    private const PAGES = ['about', 'contact', 'privacy', 'cookies', 'unsubscribe'];
 
     public static function dispatch(): void
     {
@@ -25,6 +25,17 @@ final class Router
                 do_action('chi_subscribe', $email);
             }
             header('Location: /?subscribed=' . ($valid ? '1' : '0') . '#subscribe');
+            return;
+        }
+
+        // Newsletter opt-out (compliance-20260722): removes the address, then
+        // confirms without revealing whether it was subscribed (no enumeration).
+        if ($method === 'POST' && $uri === '/unsubscribe') {
+            $email = trim((string) ($_POST['email'] ?? ''));
+            if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                db()->query("DELETE FROM chi_subscribers WHERE email = ?", [$email]);
+            }
+            header('Location: /unsubscribe?done=1');
             return;
         }
 
@@ -69,6 +80,7 @@ final class Router
         $template = match ($ctx->type) {
             'single'  => 'single.php',
             'archive' => 'archive.php',
+            'author'  => 'author.php',
             'search'  => 'search.php',
             'blog'    => 'blog.php',
             'page'    => 'page-' . $ctx->page . '.php',
@@ -97,6 +109,10 @@ final class Router
         if (preg_match('#^/category/([a-z0-9-]+)$#', $uri, $m)) {
             $term = get_category_by_slug($m[1]);
             return $term ? (object) ['type' => 'archive', 'term' => $term] : (object) ['type' => '404'];
+        }
+        if (preg_match('#^/author/([a-z0-9-]+)$#', $uri, $m)) {
+            $user = get_author_by_slug($m[1]);
+            return $user ? (object) ['type' => 'author', 'user' => $user] : (object) ['type' => '404'];
         }
         if ($uri === '/search') {
             return (object) ['type' => 'search', 'q' => trim((string) ($_GET['q'] ?? ''))];
