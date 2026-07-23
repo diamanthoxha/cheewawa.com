@@ -116,6 +116,12 @@ html { scroll-padding-top: 5.5rem; }   /* anchor jumps (e.g. /#subscribe) clear 
 .subscribe-form { display: flex; flex-direction: column; gap: .6rem; margin-top: .9rem; }
 .subscribe-form input { border: 0; border-radius: var(--radius-pill); padding: .75rem 1rem; font-family: inherit; font-size: .95rem; }
 .subscribe .button-primary { background: var(--cocoa); justify-content: center; }
+/* Fine print sits on the crimson card, so it needs light text, not the dark
+   body colour it used to inherit. rgba(255,255,255,.92) on #c22945 is ~5:1,
+   which clears WCAG AA for small text; links go solid white + underlined. */
+.subscribe-fineprint { margin: .6rem 0 0; font-size: .78rem; line-height: 1.5; color: rgba(255, 255, 255, .92); }
+.subscribe-fineprint a { color: #fff; text-decoration: underline; }
+.subscribe-fineprint a:hover { text-decoration: none; }
 .notice { background: rgba(255,255,255,.22); border-radius: 12px; padding: .55rem .85rem; font-weight: 700; margin-bottom: .7rem; }
 
 /* ---- single post ---- */

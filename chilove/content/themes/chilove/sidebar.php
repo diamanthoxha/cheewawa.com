@@ -32,6 +32,6 @@
             <input type="email" name="email" placeholder="you@email.com" required>
             <button class="button-primary" type="submit">Subscribe</button>
         </form>
-        <p class="small" style="margin:8px 0 0;font-size:.78rem;color:var(--muted-cocoa)">By subscribing you agree to our <a href="/privacy">privacy policy</a>. Unsubscribe anytime at <a href="/unsubscribe">cheewawa.com/unsubscribe</a>.</p>
+        <p class="subscribe-fineprint">By subscribing you agree to our <a href="/privacy">privacy policy</a>. Unsubscribe anytime at <a href="/unsubscribe">cheewawa.com/unsubscribe</a>.</p>
     </div>
 </aside>
