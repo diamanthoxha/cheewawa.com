@@ -11,7 +11,7 @@
         <h3><?= chi_paw(18) ?> Who we are</h3>
         <p>Cheewawa is a chihuahua blog published at <b>cheewawa.com</b> and run by
            <a href="https://hoxmedia.net/" target="_blank" rel="noopener">HOX Media</a>.
-           For anything privacy related, write to <a href="mailto:di@manth.co">di@manth.co</a>.</p>
+           For anything privacy related, use the <a href="/contact">contact form</a>.</p>
     </div>
     <div class="card credit">
         <h3><?= chi_paw(18) ?> What we collect</h3>
@@ -47,7 +47,7 @@
     <div class="card credit">
         <h3><?= chi_paw(18) ?> Your rights</h3>
         <p>You can ask us what we hold about you, ask us to correct it, or ask us to delete it.
-           One email to <a href="mailto:di@manth.co">di@manth.co</a> does the job. Newsletter emails
+           One message through the <a href="/contact">contact form</a> does the job. Newsletter emails
            stop as soon as you unsubscribe.</p>
     </div>
     <div class="card credit">

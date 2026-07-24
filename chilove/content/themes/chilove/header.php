@@ -109,10 +109,13 @@ $cur = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
     <?= chi_org_jsonld() ?>
 
     <?php // Fonts are self-hosted: @font-face in theme.css, files in /assets/fonts (no third-party connections). ?>
+    <?php // Font preloads (clsfix-20260724): fonts beat first paint, killing swap-shift CLS in throttled labs. ?>
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/fonts/baloo2-600-800-latin.woff2">
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/fonts/nunito-400-700-latin.woff2">
 
     <?php // Site CSS inlined: zero render-blocking stylesheet requests (the 3 files gzip to ~6 KB inside the HTML). ?>
     <style><?php foreach (['theme', 'site', 'pages'] as $chiCssFile) {
-        echo str_replace('</style', '', (string) @file_get_contents(CHILOVE_ROOT . '/public/assets/css/' . $chiCssFile . '.css')), "\n";
+        echo chi_minify_css(str_replace('</style', '', (string) @file_get_contents(CHILOVE_ROOT . '/public/assets/css/' . $chiCssFile . '.css'))), "\n";
     } ?></style>
 </head>
 <body>

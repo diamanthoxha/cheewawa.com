@@ -36,7 +36,7 @@
     <div class="card credit">
         <h3><?= chi_paw(18) ?> If this ever changes</h3>
         <p>Should we add anything else that uses cookies, this page will list it before it goes live.
-           Questions? <a href="mailto:di@manth.co">di@manth.co</a>.</p>
+           Questions? <a href="/contact">Use the contact form</a>.</p>
     </div>
 </div>
 

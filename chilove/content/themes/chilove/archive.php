@@ -7,7 +7,7 @@ $posts = get_posts_by_category($term->slug);
 <div class="blog-layout">
     <div class="content-col">
         <div class="section-head">
-            <h2><?= chi_paw(22) ?> <?= esc_html($term->name) ?></h2>
+            <h1><?= chi_paw(22) ?> <?= esc_html($term->name) ?></h1>
         </div>
 
         <?php if (!$posts): ?>

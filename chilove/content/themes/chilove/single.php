@@ -12,6 +12,13 @@ $related = get_related_posts($p, 3);
 .post-memorial{margin:2.5rem 0;padding:.6rem;text-align:center}
 .post-memorial img{width:100%;max-width:520px;height:auto;border-radius:12px;display:block;margin:0 auto}
 .post-memorial figcaption{margin-top:.6rem;font-weight:700;color:var(--muted-cocoa)}
+.comments{margin-top:2.4rem}
+.comments .comment{padding:14px 18px;margin:10px 0}
+.comments .comment p{margin:.35rem 0 0}
+.comment-form-card{padding:18px;margin-top:14px}
+.comment-form input[type=text],.comment-form input[type=email],.comment-form textarea{width:100%;margin:6px 0;padding:10px 12px;border:1px solid #d9c6b4;border-radius:10px;font:inherit;background:#fffdf9}
+.comment-form .hp-field{position:absolute;left:-9999px;opacity:0;height:0;overflow:hidden}
+.comment-form .fineprint{margin:8px 0 0;font-size:.8rem;color:var(--muted-cocoa)}
 </style>
 
 <article class="single">
@@ -70,6 +77,34 @@ $related = get_related_posts($p, 3);
                     <figcaption>In loving memory</figcaption>
                 </figure>
             <?php endif; ?>
+
+            <?php // Reader comments (comments-20260723): approved shown; new ones held for review. ?>
+            <?php $chiComments = get_post_comments((int) $p->id); ?>
+            <section class="comments" id="comments">
+                <h2><?= count($chiComments) ?: 'No' ?> comment<?= count($chiComments) === 1 ? '' : 's' ?> yet</h2>
+                <?php if (($_GET['commented'] ?? null) === '1'): ?>
+                    <div class="notice">Thanks! Your comment is awaiting review and will appear once approved. 🐾</div>
+                <?php endif; ?>
+                <?php foreach ($chiComments as $chiCm): ?>
+                    <div class="card comment">
+                        <p class="post-meta small"><strong><?= esc_html($chiCm->author_name) ?></strong> · <?= chi_date($chiCm->created_at) ?></p>
+                        <p><?= nl2br(esc_html($chiCm->body)) ?></p>
+                    </div>
+                <?php endforeach; ?>
+                <div class="card comment-form-card">
+                    <h3>Leave a comment</h3>
+                    <form action="/comment" method="post" class="comment-form">
+                        <input type="hidden" name="post_id" value="<?= (int) $p->id ?>">
+                        <input type="hidden" name="ts" value="<?= time() ?>">
+                        <p class="hp-field" aria-hidden="true"><label>Website<input type="text" name="website" tabindex="-1" autocomplete="off"></label></p>
+                        <input type="text" name="author_name" placeholder="Your name" required minlength="2" maxlength="80">
+                        <input type="email" name="author_email" placeholder="Email (optional, never shown)">
+                        <textarea name="body" placeholder="Your comment…" required minlength="10" maxlength="3000" rows="4"></textarea>
+                        <button class="button-primary" type="submit">Post comment</button>
+                        <p class="fineprint">Comments are reviewed before they appear. By commenting you agree to our <a href="/privacy">privacy policy</a>.</p>
+                    </form>
+                </div>
+            </section>
 
             <?php if ($related): ?>
                 <section class="related">

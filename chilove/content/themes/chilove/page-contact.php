@@ -40,8 +40,17 @@ $sent = $_GET['sent'] ?? null;
         <div class="socials">
             <a href="https://www.instagram.com/the_pupslife/" target="_blank" rel="noopener" aria-label="Instagram"><?= chi_icon('instagram', 24) ?></a>
             <a href="https://www.facebook.com/chihuahuasareawesome" target="_blank" rel="noopener" aria-label="Facebook"><?= chi_icon('facebook', 24) ?></a>
-            <a href="mailto:di@manth.co" aria-label="Email"><?= chi_icon('mail', 24) ?></a>
         </div>
+
+        <h3 style="margin-top:1.4rem"><?= chi_heart(18) ?> What lands fastest</h3>
+        <p><strong>Corrections:</strong> name the article and the line that's wrong; fixes usually
+           ship the same week. <strong>Story ideas and rescue features:</strong> a few sentences
+           and a link is plenty; we love spotlighting rescues. <strong>Health questions:</strong>
+           we're writers, not your veterinarian, so we won't diagnose your dog, but if a guide
+           left something unclear, tell us and we'll improve it for everyone.</p>
+        <p>Newsletter housekeeping has its own page: <a href="/unsubscribe">unsubscribe here</a>
+           anytime. And if you're writing about a photo of your chihuahua in a sweater, the
+           answer is yes, we want to see it.</p>
     </aside>
 </div>
 

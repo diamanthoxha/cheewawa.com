@@ -39,6 +39,38 @@ final class Router
             return;
         }
 
+        // Reader comments (comments-20260723): honeypot + time-trap + hourly IP cap,
+        // everything lands as 'pending' and only shows after moderation in /chi-mod/.
+        if ($method === 'POST' && $uri === '/comment') {
+            $postId = (int) ($_POST['post_id'] ?? 0);
+            $name   = trim((string) ($_POST['author_name'] ?? ''));
+            $email  = trim((string) ($_POST['author_email'] ?? ''));
+            $body   = trim((string) ($_POST['body'] ?? ''));
+            $bot    = trim((string) ($_POST['website'] ?? '')) !== ''
+                   || (time() - (int) ($_POST['ts'] ?? 0)) < 4;
+            $post   = $postId > 0 ? db()->getRow("SELECT slug FROM chi_posts WHERE id = ? AND status = 'publish'", [$postId]) : null;
+            $valid  = !$bot && $post
+                   && mb_strlen($name) >= 2 && mb_strlen($name) <= 80
+                   && mb_strlen($body) >= 10 && mb_strlen($body) <= 3000
+                   && ($email === '' || filter_var($email, FILTER_VALIDATE_EMAIL) !== false);
+            if ($valid) {
+                $ipHash = sha1(($_SERVER['HTTP_CF_CONNECTING_IP'] ?? $_SERVER['REMOTE_ADDR'] ?? '') . 'chi-comment-pepper');
+                $recent = (int) db()->getVar(
+                    "SELECT COUNT(*) FROM chi_comments WHERE ip_hash = ? AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)",
+                    [$ipHash]
+                );
+                if ($recent < 5) {
+                    db()->query(
+                        "INSERT INTO chi_comments (post_id, author_name, author_email, body, status, ip_hash, created_at)
+                         VALUES (?, ?, ?, ?, 'pending', ?, NOW())",
+                        [$postId, $name, $email !== '' ? $email : null, $body, $ipHash]
+                    );
+                }
+            }
+            header('Location: ' . ($post ? '/post/' . $post->slug . '?commented=1#comments' : '/'));
+            return;
+        }
+
         // Contact form → contact plugin (hook system).
         if ($method === 'POST' && $uri === '/contact') {
             $name    = trim((string) ($_POST['name'] ?? ''));

@@ -134,6 +134,16 @@ function get_posts_by_author(int $authorId, int $limit = 60): array
     return db()->getResults($sql, [(int) $authorId]);
 }
 
+/** Approved reader comments for a post, oldest first (comments-20260723). */
+function get_post_comments(int $postId): array
+{
+    return db()->getResults(
+        "SELECT author_name, body, created_at FROM chi_comments
+         WHERE post_id = ? AND status = 'approved' ORDER BY created_at ASC",
+        [$postId]
+    );
+}
+
 /* ---------------------------------------------------------------------------
  * Queries  (lean on the $wpdb-style Database layer)
  * ------------------------------------------------------------------------- */
@@ -458,7 +468,15 @@ function chi_seo_meta(object $ctx): array
     }
     if ($type === 'page') {
         $page = ucfirst((string) ($ctx->page ?? ''));
-        return ['title' => $page . ' · ' . $name, 'description' => null, 'canonical' => $base . '/' . ($ctx->page ?? '')];
+        // Static-page meta descriptions (semrush-20260724): Semrush flagged these missing.
+        $pageDescs = [
+            'about'       => "Who runs Cheewawa: Arjeta Mehmeti's chihuahua site. Honest health, training, and care guides, one author, real sources, minus the myths.",
+            'contact'     => 'Questions, corrections, or a chihuahua story to share? Get in touch with Cheewawa through the contact form.',
+            'privacy'     => 'What Cheewawa collects and why: analytics, ads, comments, and newsletter data explained in plain English, plus how to have yours removed.',
+            'cookies'     => 'The cookies cheewawa.com uses, what each one does, and how to control or delete them in your browser.',
+            'unsubscribe' => 'Leave the Cheewawa newsletter in one step. Enter your email and it is removed immediately.',
+        ];
+        return ['title' => $page . ' · ' . $name, 'description' => $pageDescs[$ctx->page ?? ''] ?? null, 'canonical' => $base . '/' . ($ctx->page ?? '')];
     }
     if ($type === 'author' && isset($ctx->user)) {
         $u = $ctx->user;
@@ -468,7 +486,7 @@ function chi_seo_meta(object $ctx): array
     if ($type === 'search') {
         return ['title' => 'Search · ' . $name, 'description' => null, 'canonical' => $base . '/search'];
     }
-    return ['title' => $name . ': chihuahuas, minus the myths', 'description' => 'Honest chihuahua care, training, health, and real stories, minus the myths and the fluff, from people who actually live with the breed.', 'canonical' => $base . '/'];
+    return ['title' => $name . ': chihuahuas, minus the myths', 'description' => 'Honest chihuahua care, training, health, and real stories, minus the myths and the fluff, from people who live with the breed. Also spelled chiwawa.', 'canonical' => $base . '/'];
 }
 
 /** Render post body: author-authored HTML as-is, plain text as paragraphs. */
@@ -521,6 +539,11 @@ function chi_org_schema(): array
         'name'  => site_name(),
         'url'   => $base . '/',
         'logo'  => ['@type' => 'ImageObject', 'url' => $base . '/apple-touch-icon.png'],
+        // Brand profiles, owner-confirmed 2026-07-23 (Arjeta's personal profiles are on her Person node).
+        'sameAs' => [
+            'https://www.instagram.com/the_pupslife/',
+            'https://www.facebook.com/chihuahuasareawesome',
+        ],
     ];
     if ($editor = chi_site_editor()) {
         $founder = ['@type' => 'Person', 'name' => $editor->display_name, 'url' => $base . author_permalink($editor)];
@@ -608,6 +631,17 @@ function chi_jsonld_blocks(object $post): string
     }
     return $out;
 }
+/** Conservative CSS minify for the inlined stylesheets (ratio-20260724):
+ *  strips comments, collapses whitespace. Raises text-to-HTML ratio site-wide. */
+function chi_minify_css(string $css): string
+{
+    $css = preg_replace('~/\*[^*]*\*+([^/*][^*]*\*+)*/~', '', $css);
+    $css = preg_replace('/\s+/', ' ', $css);
+    $css = preg_replace('/\s*([{};:,>~])\s*/', '$1', $css);
+    $css = str_replace(';}', '}', $css);
+    return trim($css);
+}
+
 /* ---------------------------------------------------------------------------
  * Responsive images (perf-20260715)
  * Pre-generated width variants (~/bin/gen_img_variants.sh) served via srcset.
