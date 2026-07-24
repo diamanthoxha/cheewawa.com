@@ -487,7 +487,15 @@ function chi_seo_meta(object $ctx): array
         if ($paged > 1) {
             $qs[] = 'paged=' . $paged;
         }
-        return ['title' => 'Blog' . ($cat !== '' ? ': ' . ucfirst($cat) : '') . $pageSuffix . ' · ' . $name, 'description' => 'All chihuahua articles, guides, and stories from ' . $name . '.' . $pageDesc, 'canonical' => $base . '/blog' . ($qs ? '?' . implode('&', $qs) : '')];
+        // Category-filtered views need their own description (blogdesc-20260724):
+        // every /blog?cat= variant shared /blog's, and Semrush flagged all 41 as
+        // duplicates. Worded unlike the /category/ archives so the two never collide.
+        $desc = 'All chihuahua articles, guides, and stories from ' . $name . '.';
+        if ($cat !== '') {
+            $catName = get_category_by_slug($cat)?->name ?? ucfirst($cat);
+            $desc = $catName . ' posts from the ' . $name . ' blog, filtered from the full chihuahua archive.';
+        }
+        return ['title' => 'Blog' . ($cat !== '' ? ': ' . ucfirst($cat) : '') . $pageSuffix . ' · ' . $name, 'description' => $desc . $pageDesc, 'canonical' => $base . '/blog' . ($qs ? '?' . implode('&', $qs) : '')];
     }
     if ($type === 'page') {
         $page = ucfirst((string) ($ctx->page ?? ''));
@@ -654,6 +662,19 @@ function chi_jsonld_blocks(object $post): string
     }
     return $out;
 }
+/** Descriptive alt derived from the image's own filename (heroalt-20260724);
+ *  falls back to the given text. Fixes hero alt=title impersonating real subjects. */
+function chi_image_alt_from_path(?string $path, string $fallback): string
+{
+    if (!$path) { return $fallback; }
+    $base = pathinfo((string) parse_url($path, PHP_URL_PATH), PATHINFO_FILENAME);
+    $base = preg_replace('/-(og|\d+w)$/', '', $base);
+    $base = preg_replace('/-(photo|illustration)$/', '', $base);
+    $words = trim(preg_replace('/[-_]+/', ' ', (string) $base));
+    if ($words === '' || preg_match('/^\d+$/', $words)) { return $fallback; }
+    return ucfirst($words);
+}
+
 /** Conservative CSS minify for the inlined stylesheets (ratio-20260724):
  *  strips comments, collapses whitespace. Raises text-to-HTML ratio site-wide. */
 function chi_minify_css(string $css): string

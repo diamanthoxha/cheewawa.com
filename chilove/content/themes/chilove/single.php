@@ -6,6 +6,8 @@ $related = get_related_posts($p, 3);
 
 <style>
 .single-media .featured-photo{width:100%;height:auto;display:block;border-radius:inherit;object-fit:cover}
+.single-media{margin:0}
+.hero-credit{padding:7px 14px;font-size:.8rem;color:var(--muted-cocoa)}
 .post-content figure{margin:1.8rem 0}
 .post-content figure img{width:100%;max-width:560px;height:auto;border-radius:12px;display:block;margin:0 auto;box-shadow:var(--shadow-soft)}
 .post-content figcaption{margin-top:.5rem;font-size:.9rem;color:var(--muted-cocoa);text-align:center;font-style:italic}
@@ -41,14 +43,16 @@ $related = get_related_posts($p, 3);
             $featured = chi_featured_image($p);
             $fdim = $featured ? @getimagesize(CHILOVE_ROOT . '/public/' . ltrim($featured, '/')) : null;
             ?>
-            <div class="single-media card">
+            <figure class="single-media card">
                 <?php if ($featured): ?>
                     <?php $fset = chi_srcset($featured); ?>
-                    <img class="featured-photo" src="<?= esc_attr($featured) ?>" alt="<?= esc_attr($p->title) ?>"<?= $fdim ? ' width="' . $fdim[0] . '" height="' . $fdim[1] . '"' : '' ?><?= $fset !== '' ? ' srcset="' . esc_attr($fset) . '" sizes="' . esc_attr(chi_sizes('featured')) . '"' : '' ?> loading="eager" fetchpriority="high">
+                    <?php $chiHeroAlt = chi_image_alt_from_path($featured, $p->title); $chiHeroAi = (bool) preg_match('/-(photo|illustration)\.webp$/', (string) $featured); ?>
+                    <img class="featured-photo" src="<?= esc_attr($featured) ?>" alt="<?= esc_attr($chiHeroAlt) ?>"<?= $fdim ? ' width="' . $fdim[0] . '" height="' . $fdim[1] . '"' : '' ?><?= $fset !== '' ? ' srcset="' . esc_attr($fset) . '" sizes="' . esc_attr(chi_sizes('featured')) . '"' : '' ?> loading="eager" fetchpriority="high">
+                    <?php if ($chiHeroAi): ?><figcaption class="hero-credit">Illustrative image, not the subject. Image: Cheewawa (AI-generated).</figcaption><?php endif; ?>
                 <?php else: ?>
                     <?= chi_thumb($p, 'tan') ?>
                 <?php endif; ?>
-            </div>
+            </figure>
             <div class="post-content"><?= chi_content_html($p->content ?? '') ?></div>
 
             <?php if (!empty($p->author_bio)): ?>
