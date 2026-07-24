@@ -125,13 +125,21 @@ function get_author_by_slug(string $slug): ?object
     return null;
 }
 
-function get_posts_by_author(int $authorId, int $limit = 60): array
+function get_posts_by_author(int $authorId, int $limit = 60, int $offset = 0): array
 {
     $sql = "SELECT " . chi_post_columns() . " FROM chi_posts p
             LEFT JOIN chi_users u ON u.id = p.author_id
             WHERE p.author_id = ? AND p.status = 'publish'
-            ORDER BY p.published_at DESC LIMIT " . (int) $limit;
+            ORDER BY p.published_at DESC LIMIT " . (int) $limit . " OFFSET " . max(0, (int) $offset);
     return db()->getResults($sql, [(int) $authorId]);
+}
+
+function count_posts_by_author(int $authorId): int
+{
+    return (int) db()->getVar(
+        "SELECT COUNT(*) FROM chi_posts WHERE author_id = ? AND status = 'publish'",
+        [(int) $authorId]
+    );
 }
 
 /** Approved reader comments for a post, oldest first (comments-20260723). */
@@ -454,6 +462,13 @@ function chi_seo_meta(object $ctx): array
     $name = site_name();
     $type = $ctx->type ?? 'home';
 
+    // Paged archive views self-canonicalize with their page number instead of
+    // pointing at page 1, so deep pages stay crawlable (pagination-20260724).
+    $paged      = max(1, (int) ($_GET['paged'] ?? 1));
+    $pageSuffix = $paged > 1 ? ', Page ' . $paged : '';
+    $pageParam  = $paged > 1 ? '?paged=' . $paged : '';
+    $pageDesc   = $paged > 1 ? ' Page ' . $paged . '.' : '';
+
     if ($type === 'single' && isset($ctx->post)) {
         $p = $ctx->post;
         $desc = !empty($p->meta_description) ? $p->meta_description : chi_excerpt($p->excerpt ?: $p->content, 28);
@@ -461,10 +476,18 @@ function chi_seo_meta(object $ctx): array
     }
     if ($type === 'archive' && isset($ctx->term)) {
         $t = $ctx->term;
-        return ['title' => $t->name . ' · ' . $name, 'description' => 'Chihuahua ' . $t->name . ' articles, guides, and stories from ' . $name . '.', 'canonical' => $base . '/category/' . $t->slug];
+        return ['title' => $t->name . $pageSuffix . ' · ' . $name, 'description' => 'Chihuahua ' . $t->name . ' articles, guides, and stories from ' . $name . '.' . $pageDesc, 'canonical' => $base . '/category/' . $t->slug . $pageParam];
     }
     if ($type === 'blog') {
-        return ['title' => 'Blog · ' . $name, 'description' => 'All chihuahua articles, guides, and stories from ' . $name . '.', 'canonical' => $base . '/blog'];
+        $cat = isset($_GET['cat']) && preg_match('/^[a-z0-9-]+$/', (string) $_GET['cat']) ? (string) $_GET['cat'] : '';
+        $qs  = [];
+        if ($cat !== '') {
+            $qs[] = 'cat=' . $cat;
+        }
+        if ($paged > 1) {
+            $qs[] = 'paged=' . $paged;
+        }
+        return ['title' => 'Blog' . ($cat !== '' ? ': ' . ucfirst($cat) : '') . $pageSuffix . ' · ' . $name, 'description' => 'All chihuahua articles, guides, and stories from ' . $name . '.' . $pageDesc, 'canonical' => $base . '/blog' . ($qs ? '?' . implode('&', $qs) : '')];
     }
     if ($type === 'page') {
         $page = ucfirst((string) ($ctx->page ?? ''));
@@ -481,7 +504,7 @@ function chi_seo_meta(object $ctx): array
     if ($type === 'author' && isset($ctx->user)) {
         $u = $ctx->user;
         $desc = chi_excerpt((string) ($u->bio ?? ''), 28) ?: ('Articles by ' . $u->display_name . ' on ' . $name . '.');
-        return ['title' => $u->display_name . ', Author · ' . $name, 'description' => $desc, 'canonical' => $base . author_permalink($u)];
+        return ['title' => $u->display_name . ', Author' . $pageSuffix . ' · ' . $name, 'description' => $desc . $pageDesc, 'canonical' => $base . author_permalink($u) . $pageParam];
     }
     if ($type === 'search') {
         return ['title' => 'Search · ' . $name, 'description' => null, 'canonical' => $base . '/search'];

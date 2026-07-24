@@ -1,8 +1,13 @@
 <?php
 get_header();
-$u     = chi_context()->user;
-$posts = get_posts_by_author((int) $u->id, 60);
-$base  = site_url();
+$u       = chi_context()->user;
+// Paginated so the full archive is reachable from the author hub
+// (pagination-20260724); previously capped at the newest 60 with no links on.
+$page    = max(1, (int) ($_GET['paged'] ?? 1));
+$perPage = 12;
+$total   = count_posts_by_author((int) $u->id);
+$posts   = get_posts_by_author((int) $u->id, $perPage, ($page - 1) * $perPage);
+$base    = site_url();
 ?>
 
 <style>
@@ -43,9 +48,11 @@ $base  = site_url();
             </div>
             <div class="post-grid">
                 <?php foreach (array_values($posts) as $i => $p): ?>
-                    <?= chi_post_card($p, ['lead' => $i === 0]) ?>
+                    <?= chi_post_card($p, ['lead' => $i === 0 && $page === 1]) ?>
                 <?php endforeach; ?>
             </div>
+
+            <?= chi_pagination($page, $total, $perPage, author_permalink($u)) ?>
         <?php else: ?>
             <div class="section-head">
                 <h2><?= chi_paw(22) ?> The writers <?= esc_html($u->display_name) ?> edits</h2>
